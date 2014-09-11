@@ -17,6 +17,18 @@
         url: 'hotels',
         tooltip: ''				
     },	
+	{
+        name: 'Lodging Inns',
+        thumb: 'none.png',
+        url: 'hotels',
+        tooltip: ''				
+    },	
+	{
+        name: 'Transport hubs',
+        thumb: 'none.png',
+        url: 'hotels',
+        tooltip: ''				
+    },	
 ]
 
 

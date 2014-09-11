@@ -1,0 +1,24 @@
+[
+    {
+        name: 'Tourism Attraction',
+        thumb: 'none.png',
+        url: 'dot_tourattract',
+        tooltip: ''				
+    },	
+	 {
+        name: 'Tourism Development',
+        thumb: 'none.png',
+        url: 'dot_tourdevt',
+        tooltip: ''				
+    },	
+	{
+        name: 'Nearby hotels',
+        thumb: 'none.png',
+        url: 'hotels',
+        tooltip: ''				
+    },	
+]
+
+
+
+

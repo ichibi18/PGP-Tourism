@@ -1,4 +1,4 @@
-PGP Map App - Disaster Risk Reduction and Management
+PGP Map App - Tourism
 =========
  
 Pre-requisites

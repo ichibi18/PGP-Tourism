@@ -36,39 +36,19 @@ Ext.define('MyPath.mappanel',{
 	
 	buildItems:function(){
 		return[			
-			{	
-				xtype:'radiofield',
-				boxLabel:'Use current location',
-				name:'rb',				
-				itemId:'rbt1',								
-				checked: true,		
-				inputValue:'1',	
-				handler:function(){					
-					var me=this.up();		
-					me.getComponent('btnGo').setDisabled(this.checked);
-					me.getComponent('Search').setDisabled(this.checked);						
-				}		
-			},			
-			{
-				xtype:'radiofield',
-				boxLabel:'Location Search',	
-				name:'rb',					
-				itemId:'rbt2',								
-				checked: false,		
-				inputValue:'2',	
-			},
+			
 			{
 				xtype:'textfield',
 				itemId:'Search',
 				width:200,
-				emptyText:'Search',
-				disabled:true,
+				emptyText:'Location Search',
+				//disabled:true,
 					
             },{
 				xtype:'button',
 				text:'Go',
 				itemId:'btnGo',
-				disabled:true,
+				//disabled:true,
 				handler:function(){				
 						
 					var me=this.up();				
@@ -91,18 +71,67 @@ Ext.define('MyPath.mappanel',{
 										graphicTitle: findThis
 								}}), 	
 								displayInLayerSwitcher: false,		
-							});							
+						});							
 						Location.addFeatures([new OpenLayers.Feature.Vector(currLoc)]);						
 						me.map.addLayer(Location);						
 						me.map.zoomToExtent(Location.getDataExtent());			 		
 					})						
 				}			
+			},
+			
+			{	
+				xtype:'button',
+				tooltip:'My current location',
+				name:'rb',				
+				itemId:'btnLoc',
+				scale:'large',				
+				icon:'./app/chooser/icons/myCurrLoc.png',
+				width:25,
+				height:25,	
+				handler:function(){					
+					var me=this.up('panel');			
+					console.log(me);
+					if(me.map.getLayersByName('Gcode').length > 0) {				
+						me.map.getLayersByName('Gcode')[0].destroy();					
+					};		
+					
+					if (navigator.geolocation) {   
+						/** Overlay current location*/		
+						navigator.geolocation.getCurrentPosition(
+							function(position){					
+								var currLoc = new OpenLayers.Geometry.Point(position.coords.longitude,position.coords.latitude).transform('EPSG:4326', 'EPSG:900913');
+								console.log('myloc--',currLoc);
+								var Location = new OpenLayers.Layer.Vector(	'My Location', {
+										styleMap: new OpenLayers.StyleMap({'default':{
+												externalGraphic: "/app/chooser/icons/MyLocation.png",				
+												graphicYOffset: -25,
+												graphicHeight: 35,
+												graphicTitle: "You're here"
+										}}) ,
+										displayInLayerSwitcher: false,		
+										
+									});		
+								Location.addFeatures([new OpenLayers.Feature.Vector(currLoc)]);						
+								me.map.addLayers([Location]);												
+								me.map.zoomToExtent(Location.getDataExtent());		
+								}
+						)		
+						
+					} else {
+						console.log("Geolocation is not supported by this browser.");
+					}						
+				}		
 			},{			
 				xtype:'button',
-				text:'Max Extent',
+				tooltip:'Max Extent',
+				icon:'./app/chooser/icons/phil.png',
+				scale:'medium',
+				width:25,
+				height:25,
 				handler:function(){
 					var me=this.up().up();				
 					me.map.zoomToMaxExtent();		
+					//console.log(me.map);
 					
 				}		
 			
@@ -120,7 +149,8 @@ Ext.define('MyPath.mappanel',{
 				controls: [
 					new OpenLayers.Control.Navigation(),					
 					new OpenLayers.Control.Zoom(),
-					new OpenLayers.Control.MousePosition(),				
+					new OpenLayers.Control.MousePosition(),
+										
 				],
 				
 				fallThrough: true,							
@@ -137,56 +167,60 @@ Ext.define('MyPath.mappanel',{
 				}
 		);
 			
-		map.addLayers([pgp_basemap_cache]);		
+			
+		var Location = new OpenLayers.Layer.Vector('My Location', {
+		 displayInLayerSwitcher: false,		
+		});	
+
+		var Location2 = new OpenLayers.Layer.Vector('Gcode', {
+		 displayInLayerSwitcher: false,		
+		});			
+		
+		
+		
+		map.addLayers([pgp_basemap_cache, Location, Location2]);		
 		map.zoomToMaxExtent()		
-		//console.log(map.maxExtent.transform('EPSG:900913','EPSG:4326'))
 		
 		
-			//
+		
+		
+   
+		 
+		 map.events.register("mousemove", map, function (e) {            
+			/* var point = map.getLonLatFromPixel( this.events.getMousePosition(e) )     
+			//console.log(point.lon, point.lat)
+			var pos = new OpenLayers.LonLat(point.lon,point.lat).transform('EPSG:900913', 'EPSG:4326');
+			console.log(pos);*/
+			OpenLayers.Strategy.Refresh
+		}); 
+		
+		
+		
+		map.events.register('click', map, function(e){		
 			
-		 	
-			var bounds = new google.maps.LatLngBounds(
-			    new google.maps.LatLng(-1.9551875704852737,106.82006796874998), 
-			    new google.maps.LatLng(23.704893827362255,141.97631796874998)		
-				
-			); 
+			var point = map.getLonLatFromPixel( this.events.getMousePosition(e) )     
+			var pos = new OpenLayers.LonLat(point.lon,point.lat).transform('EPSG:900913', 'EPSG:4326');
+			console.log(pos) 
 			
-			var request = {
-				bounds:bounds,
-				//location:pyrmont,
-				query:'hotels',								
-				//radius: '50000',				
-				//keyword:'hotel', 
-				
-		
-			};
-				
-			
-			var service = new google.maps.places.PlacesService(map.div);
-			
-			service.textSearch(request, function callback(results, status, pagination){						
-					
-					 if (status == google.maps.places.PlacesServiceStatus.OK) {																		
-						//me.createMarker(results);						
-					 }
-					
-					console.log(results)
-				    if(pagination.hasNextPage) {
-						pagination.nextPage();								
-					} 					  
-					
-					console.log(results);					
-			});	
-		
-		//
-		
-		map.events.register('click', map, function(e){			
+			//console.log(newpoint)
+
 			if (map.layers.length > 1) {
-				if  (map.layers.length>2) {
-					var mapIndex=map.layers.length-2
-				}else{
-					mapIndex=1				
-				}					
+			
+				mapIndex = map.layers.length-1
+				
+				if (map.layers[mapIndex].name=='My Location' || map.layers[mapIndex].name=='Gcode'){
+					mapIndex=mapIndex-1
+					if (map.layers[mapIndex].name=='My Location' || map.layers[mapIndex].name=='Gcode'){
+						mapIndex=mapIndex-1
+					}
+				
+				}
+				
+					
+				console.log(mapIndex)
+				console.log(map.layers[mapIndex])
+				
+				
 				
 				var topLayer = map.layers[mapIndex].params.LAYERS									
 				var url = "http://localhost:3000/geoserver.namria.gov.ph/geoserver/geoportal/wms" 

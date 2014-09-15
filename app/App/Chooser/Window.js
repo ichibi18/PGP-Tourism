@@ -28,7 +28,7 @@ Ext.define('MyPath.Chooser.Window', {
 	TPanel:'',	 
 	mappanel:'',
     //height: 600,
-    width : 200,
+    width : 315,
     title : 'Choose a layer',	
 	collapsible:true,			
 	//collapsed:true,
@@ -38,33 +38,29 @@ Ext.define('MyPath.Chooser.Window', {
     // modal: true,
     border: false,
     bodyBorder: false,
-	createMarker: function(place){
-	
-		/*  var vectorLayer = new OpenLayers.Layer.Vector(	'vector_test1', {					
-			 styleMap: new OpenLayers.StyleMap({'default':{										
-				externalGraphic: "/app/chooser/icons/marker.png",				
-				graphicYOffset: -25,
-				graphicHeight: 35,
-				//graphicTitle: findThis
-			}}), 				
-		})		
+	createMarker: function(place, vLayer, icon){	
 		
+		var pointFeatures=[]
+		console.log('place', place)
 	     for (var i = 0; i < place.length; i++) {
-		   var place1 = place[i];		   
-		   var p1 = new OpenLayers.Geometry.Point(place[i].geometry.location.B,place[i].geometry.location.k).transform('EPSG:4326','EPSG:900913')
-		   vectorLayer.addFeatures([new OpenLayers.Feature.Vector(p1)])		  
-		   console.log(p1);
-		 } 		 		  
-		 this.mappanel.map.addLayer(vectorLayer);		  */			 		
-
-		
-		  var placeLoc = place.geometry.location;
-		  var marker = new google.maps.Marker({
-			//map: this.mappanel.map.baseLayer,
-			position: place.geometry.location
-		  });
-		  
-		  
+		   	   
+		   var point = new OpenLayers.Geometry.Point(place[i].geometry.location.B,place[i].geometry.location.k).transform('EPSG:4326','EPSG:900913')
+		   var PointAttr = {'name':place[i].name,'placeid':place[i].place_id, 'vicinity':place[i].vicinity }
+		   var pointFeature = new OpenLayers.Feature.Vector(point, PointAttr, {
+				pointRadius: 16,
+				//fillOpacity: 0.7,
+				externalGraphic: icon//place[i].icon,
+			});
+		   pointFeatures.push(pointFeature);
+		   
+				
+		   
+		 } 
+		 //vLayer.addFeatures([new OpenLayers.Feature.Vector(point)])		 		 
+		 vLayer.addFeatures(pointFeatures)
+		 this.mappanel.map.addLayer(vLayer);		  			 		
+         console.log('layer??',vLayer);		  
+		 return pointFeatures  
 		 
 		
 	},
@@ -87,7 +83,7 @@ Ext.define('MyPath.Chooser.Window', {
                     listeners: {
                         scope: this,
                         selectionchange: this.onIconSelect,
-                        itemdblclick: this.fireImageSelected
+						itemdblclick: this.onIconSelect
                     }				
                 }				
 					
@@ -111,105 +107,98 @@ Ext.define('MyPath.Chooser.Window', {
 		var selectedImage = this.down('iconbrowser').selModel.getSelection()[0];
 		
 		
-
+		
 		if(this.mappanel.map.getLayersByName('My Location').length > 0) {				
 			this.mappanel.map.getLayersByName('My Location')[0].destroy();					
 		};	
 	
-		/** Check if will use user's current location*/				
-		if (this.mappanel.dockedItems.items[1].getComponent('rbt1').checked){	
-			
-			me=this			
-			
-			if(this.mappanel.map.getLayersByName('Gcode').length > 0) {				
-				this.mappanel.map.getLayersByName('Gcode')[0].destroy();					
-			};		
-			
-			if (navigator.geolocation) {   
-				/** Overlay current location*/		
-				navigator.geolocation.getCurrentPosition(
-					function(position){					
-						var currLoc = new OpenLayers.Geometry.Point(position.coords.longitude,position.coords.latitude).transform('EPSG:4326', 'EPSG:900913');
-						console.log('myloc--',currLoc);
-						var Location = new OpenLayers.Layer.Vector(	'My Location', {
-								styleMap: new OpenLayers.StyleMap({'default':{
-										externalGraphic: "/app/chooser/icons/MyLocation.png",				
-										graphicYOffset: -25,
-										graphicHeight: 35,
-										graphicTitle: "You're here"
-								}}) ,
-								displayInLayerSwitcher: false,		
-								
-							});		
-						Location.addFeatures([new OpenLayers.Feature.Vector(currLoc)]);						
-						me.mappanel.map.addLayers([Location]);												
-						me.mappanel.map.zoomToExtent(Location.getDataExtent());		
-						}
-				)		
-				
-			} else {
-				console.log("Geolocation is not supported by this browser.");
-			}
-		}
+		
 		
 		/**
 		Load selected layer
 		*/	
 		var layername = selectedImage.data.name;
-		var layer = selectedImage.data.url;		
-		//console.log(layer);
+		var layer = selectedImage.data.url;
+		var isWMS=	selectedImage.data.isWms
 		
-		if (layername=='Nearby hotels'){
+		console.log(layername);
+		
+		
+		if(this.mappanel.map.getLayersByName(layername).length > 0) {				
+					this.mappanel.map.getLayersByName(layername)[0].destroy();					
+		};
+		
+		if (!isWMS){			
+			var icon='/app/chooser/icons/' + layername + '.png'
+			var vectorLayer = new OpenLayers.Layer.Vector(layername, {									
+				styleMap: new OpenLayers.StyleMap({'default':{										
+					externalGraphic: icon,			
+					graphicYOffset: -25,
+					graphicHeight: 30,					
+				}}), 								
+			})		
 			
-			//
+			vectorLayer.events.on({'featureselected': function(e){
+			   console.log('event')
+			}}); 
 			
-		 	
-			var bounds = new google.maps.LatLngBounds(
-			    new google.maps.LatLng(-1.9551875704852737,106.82006796874998), 
-			    new google.maps.LatLng(23.704893827362255,141.97631796874998)		
-				
-			); 
+			console.log('map extent',me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326'));
+						
+			
+			var bott = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').bottom			
+			var left = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').left
+			var top = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').top
+			var right = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').right
+			
+			
+
+			 var bounds = new google.maps.LatLngBounds(
+			    new google.maps.LatLng(bott,left), 
+			    new google.maps.LatLng(top,right)				
+			);  
+			
+			console.log('bounds--',bounds.getCenter());
+			
+			console.log(layername)
+			var pyrmont = new google.maps.LatLng(bounds.getCenter().k,bounds.getCenter().B);
+			
+			var type
+			if (layername=='Hotels'){
+				type='lodging'			
+			}else{
+				type='bus_station'
+			}
 			
 			var request = {
-				bounds:bounds,
-				//location:pyrmont,
-				query:'hotels',								
-				//radius: '50000',				
-				//keyword:'hotel', 
+				//bounds: bounds,
+				location:bounds.getCenter(),
+				//rankby:google.maps.places.RankBy.DISTANCE,
+				//keyword:layername,								
+				radius: '3000',		
+				types:[type]	
+				//name:'hotel', 
 				
 		
 			};
-				
 			
-			/* var service = new google.maps.places.PlacesService(me.mappanel.map.baseLayer.div);			
-			service.textSearch(request, function callback(results, status, pagination){				
-					 if (status == google.maps.places.PlacesServiceStatus.OK) {																		
-						me.createMarker(results);						
-					 }					
-					
-				    if(pagination.hasNextPage) {
-						pagination.nextPage();								
-					} 					  
-					
-					console.log(pagination);					
-			});	 */
+			console.log('map--', me.mappanel.map)
+			console.log('map---',map)
 			
 			var service = new google.maps.places.PlacesService(me.mappanel.map.baseLayer.div);			
-			service.textSearch(request, function callback(results, status){				
-					 for (var i = 0; i < results.length; i++) {
-					  me.createMarker(results[i]);
-					}						
-			});	
+			service.nearbySearch(request, function callback(results, status, pagination){				
+					 if (status == google.maps.places.PlacesServiceStatus.OK) {																		
+						me.createMarker(results, vectorLayer, icon);						
+					 }								
+				    if (pagination.hasNextPage) {
+						pagination.nextPage();								
+					} 				  
+					
+					console.log(results);					
+			});	 				
 			
 			
-		//
-			
-			
-		
 		}else{
-			if(this.mappanel.map.getLayersByName(layername).length > 0) {				
-					this.mappanel.map.getLayersByName(layername)[0].destroy();					
-			};					
+		
 			
 			
 			var Layer1 = new OpenLayers.Layer.WMS(
@@ -219,15 +208,14 @@ Ext.define('MyPath.Chooser.Window', {
 					layers:layer,				
 					transparent:true						
 				},
-				{
-					//isBaseLayer:false,
+				{					
 					opacity:.7
 				}
 			); 		
 			this.mappanel.map.addLayer(Layer1);		
 		}	
+	
 		
-
     },
    
 	

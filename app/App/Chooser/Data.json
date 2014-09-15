@@ -1,33 +1,53 @@
 [
     {
         name: 'Tourism Attraction',
-        thumb: 'none.png',
+        thumb: 'Tattract.png',
         url: 'dot_tourattract',
-        tooltip: ''				
+        tooltip: '',
+		isWms:true	
     },	
 	 {
+        name: 'Tourism Ecozone',
+        thumb: 'none.png',
+        url: 'dot_tourecon',
+        tooltip: '',
+		isWms:true	
+    },	
+	{
         name: 'Tourism Development',
         thumb: 'none.png',
         url: 'dot_tourdevt',
-        tooltip: ''				
+        tooltip: '',
+		isWms:true
     },	
 	{
-        name: 'Nearby hotels',
-        thumb: 'none.png',
+        name: 'Hotels',
+        thumb: 'lodging.png',
         url: 'hotels',
-        tooltip: ''				
+        tooltip: '',
+		isWms:false	
     },	
 	{
-        name: 'Lodging Inns',
-        thumb: 'none.png',
+        name: 'Airports',
+        thumb: 'airport.png',
+        url: 'dotc_nationalairports',
+        tooltip: '',
+		isWms:true	
+    },	
+	
+	{
+        name: 'Bus Stations',
+        thumb: 'bus.png',
         url: 'hotels',
-        tooltip: ''				
+        tooltip: '',
+		isWms:false
     },	
 	{
-        name: 'Transport hubs',
-        thumb: 'none.png',
-        url: 'hotels',
-        tooltip: ''				
+        name: 'Train Stations',
+        thumb: 'train.png',
+        url: 'railstation10k',
+        tooltip: '',
+		isWms:true	
     },	
 ]
 

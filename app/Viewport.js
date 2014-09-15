@@ -7,7 +7,7 @@ paths: {
 	GeoExt: "/lib/GeoExt",		
 	} 
 });
-var map
+
 Ext.application({
     name: 'OL3EXT4',	
 	requires:[
@@ -29,27 +29,27 @@ Ext.application({
 		var MapPanel= Ext.create('MyPath.mappanel');
 		
  		
-		/* var store = Ext.create('Ext.data.TreeStore', {
+		var store = Ext.create('Ext.data.TreeStore', {
             model: 'GeoExt.data.LayerTreeModel',
             root: {
                 plugins: [{
                     ptype: "gx_layercontainer",
                     loader: {
                         createNode: function(attr) {                            
-							
-							if (attr.text=="Nearby hotels"){
+							console.log('attr',attr)
+							if (attr.text=="Hotels" || attr.text=="Bus Stations"){
 								attr.component = {
 									xtype: "gx_overlaylayercontainer",
 									layerRecord: MapPanel.layers.getByLayer(attr.layer),
 									showTitle: false,
-									icon:'/app/chooser/icons/equake.png',
+									icon:'/app/chooser/icons/' + attr.text + '.png',
 									// custom class for css positioning
 									// see tree-legend.html
 									cls: "legend"
 								};
 								return GeoExt.tree.LayerLoader.prototype.createNode.call(this, attr);
 							}else{
-								// add a WMS legend to each node created
+								// add a WMS legend to each node created								
 								attr.component = {
 									xtype: "gx_wmslegend",
 									layerRecord: MapPanel.layers.getByLayer(attr.layer),
@@ -64,15 +64,16 @@ Ext.application({
                     }
                 }]
             }
-        }); */
+        }); 
 		
 		 
 		
-		/*  var tree = Ext.create('GeoExt.tree.Panel', {
+		 var tree = Ext.create('GeoExt.tree.Panel', {
             region: "east",
             title: "Layers",
             width: 250,
             autoScroll: true,
+			collapsible:true,
             viewConfig: {
                 plugins: [{
                     ptype: 'treeviewdragdrop',
@@ -82,13 +83,13 @@ Ext.application({
             store: store,
             rootVisible: false,
             lines: false
-        });  */
+        });  
 				
 		var ChooserPanel = Ext.create('MyPath.Chooser.Window', {
 			id: 'img-chooser-dlg',
 			region:'west',									
 			mappanel:MapPanel,	
-			//Tpanel:tree	
+			Tpanel:tree	
 			}	
 		);    		
 		
@@ -97,7 +98,7 @@ Ext.application({
             items:[			
 				MapPanel,
 				ChooserPanel,
-				//tree
+				tree
             ]
         });	
     }

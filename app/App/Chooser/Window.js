@@ -26,26 +26,21 @@ If you are unsure which license is appropriate for your use, please contact the 
 Ext.define('MyPath.Chooser.Window', {
     extend: 'Ext.panel.Panel',      
 	TPanel:'',	 
-	mappanel:'',
-    //height: 600,
-    width : 315,
+	mappanel:'',    
+    width : 200,
     title : 'Choose a layer',	
-	collapsible:true,			
-	//collapsed:true,
-    //closeAction: 'hide',	
-    //layout: 'border',
-	layout:'fit',
-    // modal: true,
+	collapsible:true,				
+	layout:'fit',    
     border: false,
     bodyBorder: false,
 	createMarker: function(place, vLayer, icon){	
-		
+		console.log('place', place);
 		var pointFeatures=[]
 		console.log('place', place)
 	     for (var i = 0; i < place.length; i++) {
 		   	   
 		   var point = new OpenLayers.Geometry.Point(place[i].geometry.location.B,place[i].geometry.location.k).transform('EPSG:4326','EPSG:900913')
-		   var PointAttr = {'name':place[i].name,'placeid':place[i].place_id, 'vicinity':place[i].vicinity }
+		   var PointAttr = {'name':place[i].name,'type':place[i].types[0], 'vicinity':place[i].vicinity }
 		   var pointFeature = new OpenLayers.Feature.Vector(point, PointAttr, {
 				pointRadius: 16,
 				//fillOpacity: 0.7,
@@ -56,35 +51,11 @@ Ext.define('MyPath.Chooser.Window', {
 				
 		   
 		} 
-		//vLayer.addFeatures([new OpenLayers.Feature.Vector(point)])		 		 
+		
 		vLayer.addFeatures(pointFeatures)
 		this.mappanel.map.addLayer(vLayer);		  			 		
         console.log('layer??',vLayer);		
-		this.mappanel.map.zoomOut(.5)
-		
-	/* 	selectctrl = new OpenLayers.Control.SelectFeature(
-			vLayer,
-			{
-			 clickout: false, 
-             toggle: false,
-             multiple: false, 
-             hover: false,	
-			}
-		
-		
-		) */
-		
-		/* this.mappanel.map.addControl(selectctrl)
-		
-		selectctrl.activate();        
-		vLayer.events.on({
-			"featureselected": function(event) {
-			console.log(event.feature);
-		}
-		}); */
-		return pointFeatures  
-		 
-		
+		this.mappanel.map.zoomOut(.5)	
 	},
     
     /**
@@ -113,9 +84,8 @@ Ext.define('MyPath.Chooser.Window', {
 				]
             }					
 			
-        ];      
+        ];            
         
-        //this.callParent(arguments);
 		this.callParent();        
        
     },   
@@ -162,7 +132,7 @@ Ext.define('MyPath.Chooser.Window', {
 			
 			
 			
-			//
+			
 			
 			selectctrl = new OpenLayers.Control.SelectFeature(
 			vectorLayer,
@@ -183,7 +153,7 @@ Ext.define('MyPath.Chooser.Window', {
 				"featureselected": function(event) {
 				console.log('aaa',event.feature);
 				
-				//--
+				
 				popup = Ext.create('GeoExt.window.Popup', {
 					title: "Feature Information",
 					//location: pos,
@@ -200,21 +170,16 @@ Ext.define('MyPath.Chooser.Window', {
 				})
 				popup.show();
 				
-				//--
+				
 				
 				
 				
 				
 			}
 			});
-			//
-			
-			
-			
-			
 			
 			console.log('map extent',me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326'));
-						
+			
 			
 			var bott = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').bottom			
 			var left = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').left
@@ -235,25 +200,17 @@ Ext.define('MyPath.Chooser.Window', {
 			
 			var type
 			if (layername=='Hotels'){
-				type='lodging'			
+				type='hotel'			
 			}else{
-				type='bus_station'
+				type='bus station'
 			}
 			
-			var request = {
-				//bounds: bounds,
+			var request = {				
 				location:bounds.getCenter(),
-				//rankby:google.maps.places.RankBy.DISTANCE,
-				//keyword:layername,								
-				radius: '5000',		
-				types:[type]	
-				
-				
-		
+				rankby:google.maps.places.RankBy.DISTANCE,											
+				radius: '5000',					
+				keyword:type	
 			};
-			
-			console.log('map--', me.mappanel.map)
-			console.log('map---',map)
 			
 			var service = new google.maps.places.PlacesService(me.mappanel.map.baseLayer.div);			
 			service.nearbySearch(request, function callback(results, status, pagination){				
@@ -262,17 +219,13 @@ Ext.define('MyPath.Chooser.Window', {
 						
 					 }								
 				    if (pagination.hasNextPage) {
-						pagination.nextPage();								
-
+						pagination.nextPage();
 					} 				  
 					
 					console.log(results);					
-			});	 				
+			});	 		
 			
-			
-		}else{
-		
-			
+		}else{		
 			
 			var Layer1 = new OpenLayers.Layer.WMS(
 				layername,
@@ -289,18 +242,16 @@ Ext.define('MyPath.Chooser.Window', {
 		}	
 	
 		
-    },
-   
+    },  
 	
     /**
      * Fires the 'selected' event, informing other components that an image has been selected
      */
     fireImageSelected: function() {
-        var selectedImage = this.down('iconbrowser').selModel.getSelection()[0];
-        //console.log(selectedImage);
+        var selectedImage = this.down('iconbrowser').selModel.getSelection()[0];        
         if (selectedImage) {
             this.fireEvent('selected', selectedImage);
-            //this.hide();
+        
         }
     }
 	

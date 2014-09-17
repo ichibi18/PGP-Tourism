@@ -6,25 +6,12 @@
         tooltip: '',
 		isWms:true	
     },	
-	 {
-        name: 'Tourism Ecozone',
-        thumb: 'none.png',
-        url: 'dot_tourecon',
-        tooltip: '',
-		isWms:true	
-    },	
-	{
-        name: 'Tourism Development',
-        thumb: 'none.png',
-        url: 'dot_tourdevt',
-        tooltip: '',
-		isWms:true
-    },	
+	 	
 	{
         name: 'Hotels',
         thumb: 'lodging.png',
         url: 'hotels',
-        tooltip: '',
+        tooltip: 'Zoom first to the area of interest to get results',
 		isWms:false	
     },	
 	{
@@ -39,7 +26,7 @@
         name: 'Bus Stations',
         thumb: 'bus.png',
         url: 'hotels',
-        tooltip: '',
+        tooltip: 'Zoom first to the area of interest to get results',
 		isWms:false
     },	
 	{

@@ -55,12 +55,34 @@ Ext.define('MyPath.Chooser.Window', {
 		   
 				
 		   
-		 } 
-		 //vLayer.addFeatures([new OpenLayers.Feature.Vector(point)])		 		 
-		 vLayer.addFeatures(pointFeatures)
-		 this.mappanel.map.addLayer(vLayer);		  			 		
-         console.log('layer??',vLayer);		  
-		 return pointFeatures  
+		} 
+		//vLayer.addFeatures([new OpenLayers.Feature.Vector(point)])		 		 
+		vLayer.addFeatures(pointFeatures)
+		this.mappanel.map.addLayer(vLayer);		  			 		
+        console.log('layer??',vLayer);		
+		this.mappanel.map.zoomOut(.5)
+		
+	/* 	selectctrl = new OpenLayers.Control.SelectFeature(
+			vLayer,
+			{
+			 clickout: false, 
+             toggle: false,
+             multiple: false, 
+             hover: false,	
+			}
+		
+		
+		) */
+		
+		/* this.mappanel.map.addControl(selectctrl)
+		
+		selectctrl.activate();        
+		vLayer.events.on({
+			"featureselected": function(event) {
+			console.log(event.feature);
+		}
+		}); */
+		return pointFeatures  
 		 
 		
 	},
@@ -138,9 +160,58 @@ Ext.define('MyPath.Chooser.Window', {
 				}}), 								
 			})		
 			
-			vectorLayer.events.on({'featureselected': function(e){
-			   console.log('event')
-			}}); 
+			
+			
+			//
+			
+			selectctrl = new OpenLayers.Control.SelectFeature(
+			vectorLayer,
+				{
+				 clickout: false, 
+				 toggle: false,
+				 multiple: false, 
+				 hover: false,	
+				}				
+			)
+			
+			
+			
+			this.mappanel.map.addControl(selectctrl)
+		
+			selectctrl.activate();        
+			vectorLayer.events.on({
+				"featureselected": function(event) {
+				console.log('aaa',event.feature);
+				
+				//--
+				popup = Ext.create('GeoExt.window.Popup', {
+					title: "Feature Information",
+					//location: pos,
+					map:map,	
+					width: 300,	
+					height:150,							
+					items: {
+						xtype:'propertygrid',
+						source:event.feature.data,
+						hideHeaders: false,
+						sortableColumns: false
+					},
+					autoScroll: true
+				})
+				popup.show();
+				
+				//--
+				
+				
+				
+				
+			}
+			});
+			//
+			
+			
+			
+			
 			
 			console.log('map extent',me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326'));
 						
@@ -174,9 +245,9 @@ Ext.define('MyPath.Chooser.Window', {
 				location:bounds.getCenter(),
 				//rankby:google.maps.places.RankBy.DISTANCE,
 				//keyword:layername,								
-				radius: '3000',		
+				radius: '5000',		
 				types:[type]	
-				//name:'hotel', 
+				
 				
 		
 			};
@@ -187,10 +258,12 @@ Ext.define('MyPath.Chooser.Window', {
 			var service = new google.maps.places.PlacesService(me.mappanel.map.baseLayer.div);			
 			service.nearbySearch(request, function callback(results, status, pagination){				
 					 if (status == google.maps.places.PlacesServiceStatus.OK) {																		
-						me.createMarker(results, vectorLayer, icon);						
+						me.createMarker(results, vectorLayer, icon);			
+						
 					 }								
 				    if (pagination.hasNextPage) {
 						pagination.nextPage();								
+
 					} 				  
 					
 					console.log(results);					

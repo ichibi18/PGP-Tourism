@@ -1,1 +1,1 @@
-A sample readme text
+sample readme file

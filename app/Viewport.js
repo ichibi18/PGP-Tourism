@@ -38,6 +38,7 @@ Ext.application({
                         createNode: function(attr) {                            
 							console.log('attr',attr)
 							if (attr.text=="Hotels" || attr.text=="Bus Stations"){
+								
 								attr.component = {
 									xtype: "gx_overlaylayercontainer",
 									layerRecord: MapPanel.layers.getByLayer(attr.layer),

@@ -6,6 +6,7 @@ Ext.define('MyPath.mappanel',{
 	title: "Philippine Geoportal - Tourism",   			
 	layout:'border',	
 	region:'center',
+	tPanel:'',
 	width:100,
 	height:100,
 	selLayer:'',		
@@ -36,19 +37,39 @@ Ext.define('MyPath.mappanel',{
 	
 	buildItems:function(){
 		return[			
-			
+			{	
+				xtype:'radiofield',
+				boxLabel:'Use current location',
+				name:'rb',				
+				itemId:'rbt1',								
+				checked: true,		
+				inputValue:'1',	
+				handler:function(){					
+					var me=this.up();		
+					me.getComponent('btnGo').setDisabled(this.checked);
+					me.getComponent('Search').setDisabled(this.checked);						
+				}		
+			},			
+			{
+				xtype:'radiofield',
+				boxLabel:'Location Search',	
+				name:'rb',					
+				itemId:'rbt2',								
+				checked: false,		
+				inputValue:'2',	
+			},
 			{
 				xtype:'textfield',
 				itemId:'Search',
 				width:200,
-				emptyText:'Location Search',
-				//disabled:true,
+				emptyText:'Search',
+				disabled:true,
 					
             },{
 				xtype:'button',
 				text:'Go',
 				itemId:'btnGo',
-				//disabled:true,
+				disabled:true,
 				handler:function(){				
 						
 					var me=this.up();				
@@ -71,63 +92,16 @@ Ext.define('MyPath.mappanel',{
 										graphicTitle: findThis
 								}}), 	
 								displayInLayerSwitcher: false,		
-						});							
+							});							
 						Location.addFeatures([new OpenLayers.Feature.Vector(currLoc)]);						
 						me.map.addLayer(Location);						
 						me.map.zoomToExtent(Location.getDataExtent());			 		
 					})						
 				}			
-			},
-			
-			{	
-				xtype:'button',
-				tooltip:'My current location',
-				name:'rb',				
-				itemId:'btnLoc',
-				scale:'large',				
-				icon:'./app/chooser/icons/myCurrLoc.png',
-				width:25,
-				height:25,	
-				handler:function(){					
-					var me=this.up('panel');			
-					console.log(me);
-					if(me.map.getLayersByName('Gcode').length > 0) {				
-						me.map.getLayersByName('Gcode')[0].destroy();					
-					};		
-					
-					if (navigator.geolocation) {   
-						/** Overlay current location*/		
-						navigator.geolocation.getCurrentPosition(
-							function(position){					
-								var currLoc = new OpenLayers.Geometry.Point(position.coords.longitude,position.coords.latitude).transform('EPSG:4326', 'EPSG:900913');
-								console.log('myloc--',currLoc);
-								var Location = new OpenLayers.Layer.Vector(	'My Location', {
-										styleMap: new OpenLayers.StyleMap({'default':{
-												externalGraphic: "/app/chooser/icons/MyLocation.png",				
-												graphicYOffset: -25,
-												graphicHeight: 35,
-												graphicTitle: "You're here"
-										}}) ,
-										displayInLayerSwitcher: false,		
-										
-									});		
-								Location.addFeatures([new OpenLayers.Feature.Vector(currLoc)]);						
-								me.map.addLayers([Location]);												
-								me.map.zoomToExtent(Location.getDataExtent());		
-								}
-						)		
-						
-					} else {
-						console.log("Geolocation is not supported by this browser.");
-					}						
-				}		
 			},{			
 				xtype:'button',
 				tooltip:'Max Extent',
 				icon:'./app/chooser/icons/phil.png',
-				scale:'medium',
-				width:25,
-				height:25,
 				handler:function(){
 					var me=this.up().up();				
 					me.map.zoomToMaxExtent();		
@@ -183,9 +157,6 @@ Ext.define('MyPath.mappanel',{
 		
 		
 		
-		
-   
-		 
 		 map.events.register("mousemove", map, function (e) {            
 			/* var point = map.getLonLatFromPixel( this.events.getMousePosition(e) )     
 			//console.log(point.lon, point.lat)
@@ -198,12 +169,11 @@ Ext.define('MyPath.mappanel',{
 		
 		map.events.register('click', map, function(e){		
 			
+			
+			
 			var point = map.getLonLatFromPixel( this.events.getMousePosition(e) )     
 			var pos = new OpenLayers.LonLat(point.lon,point.lat).transform('EPSG:900913', 'EPSG:4326');
-			console.log(pos) 
 			
-			//console.log(newpoint)
-
 			if (map.layers.length > 1) {
 			
 				mapIndex = map.layers.length-1
@@ -212,15 +182,8 @@ Ext.define('MyPath.mappanel',{
 					mapIndex=mapIndex-1
 					if (map.layers[mapIndex].name=='My Location' || map.layers[mapIndex].name=='Gcode'){
 						mapIndex=mapIndex-1
-					}
-				
-				}
-				
-					
-				console.log(mapIndex)
-				console.log(map.layers[mapIndex])
-				
-				
+					}				
+				} 
 				
 				var topLayer = map.layers[mapIndex].params.LAYERS									
 				var url = "http://localhost:3000/geoserver.namria.gov.ph/geoserver/geoportal/wms" 
@@ -228,8 +191,8 @@ Ext.define('MyPath.mappanel',{
 						  + "&EXCEPTIONS=application/vnd.ogc.se_xml"
 						  + "&SERVICE=WMS&VERSION=1.1.1"
 						  + "&BBOX=" + map.getExtent().toBBOX()
-						  + "&X=" + e.xy.x
-						  + "&Y=" + e.xy.y
+						  + "&X=" + Math.round(e.xy.x)
+						  + "&Y=" + Math.round(e.xy.y)
 						  + "&INFO_FORMAT=application/json"					  
 						  + "&QUERY_LAYERS=" + topLayer
 						  + "&LAYERS=" + topLayer

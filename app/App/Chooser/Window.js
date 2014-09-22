@@ -27,18 +27,134 @@ Ext.define('MyPath.Chooser.Window', {
     extend: 'Ext.panel.Panel',      
 	TPanel:'',	 
 	mappanel:'',    
-    width : 200,
+    width : 330,
     title : 'Choose a layer',	
 	collapsible:true,				
 	layout:'fit',    
     border: false,
     bodyBorder: false,
-	createMarker: function(place, vLayer, icon){	
-		console.log('place', place);
-		var pointFeatures=[]
-		console.log('place', place)
-	     for (var i = 0; i < place.length; i++) {
-		   	   
+	loadLayer:function(selectedImage){
+		var me = this
+		var layername = selectedImage.data.name;
+		var layer = selectedImage.data.url;
+		var isWMS=	selectedImage.data.isWms;
+		var type = layer;		
+		if(this.mappanel.map.getLayersByName(layername).length > 0) {				
+			this.mappanel.map.getLayersByName(layername)[0].destroy();		
+			
+		};
+		
+		if (!isWMS){			
+			var icon='/app/chooser/icons/' + layername + '.png'
+			var vectorLayer = new OpenLayers.Layer.Vector(layername, {									
+				styleMap: new OpenLayers.StyleMap({'default':{										
+					externalGraphic: icon,			
+					graphicYOffset: -25,
+					graphicHeight: 30,					
+				}}), 								
+			})		
+			
+			selectctrl = new OpenLayers.Control.SelectFeature(
+			vectorLayer,
+				{
+				 clickout: false, 
+				 toggle: false,
+				 multiple: false, 
+				 hover: false,	
+				}				
+			)
+					
+			
+			this.mappanel.map.addControl(selectctrl)		
+			selectctrl.activate();    		
+			vectorLayer.events.on({
+				"featureselected": function(event) {
+					popup = Ext.create('GeoExt.window.Popup', {
+					title: "Feature Information",
+					//location: pos,
+					map:map,	
+					width: 300,	
+					height:150,							
+					items: {
+						xtype:'propertygrid',
+						source:event.feature.data,
+						hideHeaders: false,
+						sortableColumns: false
+					},
+					autoScroll: true
+				})
+				popup.show();			
+				
+			}
+			});
+			
+			var bott = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').bottom			
+			var left = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').left
+			var top = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').top
+			var right = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').right
+			
+			
+
+			 var bounds = new google.maps.LatLngBounds(
+			    new google.maps.LatLng(bott,left), 
+			    new google.maps.LatLng(top,right)				
+			);  
+			
+			
+			//var pyrmont = new google.maps.LatLng(bounds.getCenter().k,bounds.getCenter().B);
+			
+			/* var type
+			
+			if (layername=='Hotels'){
+				type='lodging'
+			}else{
+				type='bus station'
+			} */
+			
+			var request = {				
+				location:bounds.getCenter(),
+				//rankby:'distance',
+				radius: '3000',					
+				keyword:type	
+				
+				
+			};
+			console.log(type)
+			var service = new google.maps.places.PlacesService(me.mappanel.map.baseLayer.div);			
+			service.nearbySearch(request, function callback(results, status, pagination){
+					if (status == google.maps.places.PlacesServiceStatus.OK) {																		
+						me.createMarker(results, vectorLayer, icon);			
+						
+					 }								
+				    if (pagination.hasNextPage) {
+						pagination.nextPage();
+					} 				  
+					console.log(results);	
+						
+			});	 					
+		
+		}else{		
+		
+			 var Layer1 = new OpenLayers.Layer.WMS(
+				layername,
+				'http://geoserver.namria.gov.ph/geoserver/geoportal/wms',
+				{
+					layers:layer,					
+					transparent:true						
+				},
+				{					
+					opacity:.7,
+					
+				}
+			); 		 			
+			this.mappanel.map.addLayer(Layer1);		
+		}
+	
+	
+	},
+	createMarker: function(place, vLayer, icon){			
+		var pointFeatures=[]		
+	     for (var i = 0; i < place.length; i++) {		   
 		   var point = new OpenLayers.Geometry.Point(place[i].geometry.location.B,place[i].geometry.location.k).transform('EPSG:4326','EPSG:900913')
 		   var PointAttr = {'name':place[i].name,'type':place[i].types[0], 'vicinity':place[i].vicinity }
 		   var pointFeature = new OpenLayers.Feature.Vector(point, PointAttr, {
@@ -46,16 +162,11 @@ Ext.define('MyPath.Chooser.Window', {
 				//fillOpacity: 0.7,
 				externalGraphic: icon//place[i].icon,
 			});
-		   pointFeatures.push(pointFeature);
-		   
-				
-		   
+		   pointFeatures.push(pointFeature);   
 		} 
-		
 		vLayer.addFeatures(pointFeatures)
-		this.mappanel.map.addLayer(vLayer);		  			 		
-        console.log('layer??',vLayer);		
-		this.mappanel.map.zoomOut(.5)	
+		this.mappanel.map.addLayer(vLayer);			
+		this.mappanel.map.zoomOut();			
 	},
     
     /**
@@ -78,10 +189,7 @@ Ext.define('MyPath.Chooser.Window', {
                         selectionchange: this.onIconSelect,
 						itemdblclick: this.onIconSelect
                     }				
-                }				
-					
-				
-				]
+                }]
             }					
 			
         ];            
@@ -97,150 +205,46 @@ Ext.define('MyPath.Chooser.Window', {
 	
 		var me=this;
 		var selectedImage = this.down('iconbrowser').selModel.getSelection()[0];
-		
-		
-		
+			
 		if(this.mappanel.map.getLayersByName('My Location').length > 0) {				
 			this.mappanel.map.getLayersByName('My Location')[0].destroy();					
 		};	
-	
 		
 		
-		/**
-		Load selected layer
-		*/	
-		var layername = selectedImage.data.name;
-		var layer = selectedImage.data.url;
-		var isWMS=	selectedImage.data.isWms
-		
-		console.log(layername);
-		
-		
-		if(this.mappanel.map.getLayersByName(layername).length > 0) {				
-					this.mappanel.map.getLayersByName(layername)[0].destroy();					
-		};
-		
-		if (!isWMS){			
-			var icon='/app/chooser/icons/' + layername + '.png'
-			var vectorLayer = new OpenLayers.Layer.Vector(layername, {									
-				styleMap: new OpenLayers.StyleMap({'default':{										
-					externalGraphic: icon,			
-					graphicYOffset: -25,
-					graphicHeight: 30,					
-				}}), 								
-			})		
+		if (this.mappanel.dockedItems.items[1].getComponent('rbt1').checked){	
 			
+			if(this.mappanel.map.getLayersByName('Gcode').length > 0) {				
+				this.mappanel.map.getLayersByName('Gcode')[0].destroy();					
+			};		
 			
-			
-			
-			
-			selectctrl = new OpenLayers.Control.SelectFeature(
-			vectorLayer,
-				{
-				 clickout: false, 
-				 toggle: false,
-				 multiple: false, 
-				 hover: false,	
-				}				
-			)
-			
-			
-			
-			this.mappanel.map.addControl(selectctrl)
-		
-			selectctrl.activate();        
-			vectorLayer.events.on({
-				"featureselected": function(event) {
-				console.log('aaa',event.feature);
+			if (navigator.geolocation) {   
+				/** Overlay current location*/		
+				navigator.geolocation.getCurrentPosition(
+					function(position){					
+						var currLoc = new OpenLayers.Geometry.Point(position.coords.longitude,position.coords.latitude).transform('EPSG:4326', 'EPSG:900913');						
+						var Location = new OpenLayers.Layer.Vector(	'My Location', {
+								styleMap: new OpenLayers.StyleMap({'default':{
+										externalGraphic: "/app/chooser/icons/MyLocation.png",				
+										graphicYOffset: -25,
+										graphicHeight: 35,
+										graphicTitle: "You're here"
+								}}) ,
+								displayInLayerSwitcher: false,		
+								
+							});		
+						Location.addFeatures([new OpenLayers.Feature.Vector(currLoc)]);						
+						me.mappanel.map.addLayers([Location]);												
+						me.mappanel.map.zoomToExtent(Location.getDataExtent());	
+						me.loadLayer(selectedImage);	
+						}
+				)		
 				
-				
-				popup = Ext.create('GeoExt.window.Popup', {
-					title: "Feature Information",
-					//location: pos,
-					map:map,	
-					width: 300,	
-					height:150,							
-					items: {
-						xtype:'propertygrid',
-						source:event.feature.data,
-						hideHeaders: false,
-						sortableColumns: false
-					},
-					autoScroll: true
-				})
-				popup.show();
-				
-				
-				
-				
-				
-				
+			} else {
+				console.log("Geolocation is not supported by this browser.");
 			}
-			});
-			
-			console.log('map extent',me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326'));
-			
-			
-			var bott = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').bottom			
-			var left = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').left
-			var top = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').top
-			var right = me.mappanel.map.getExtent().transform('EPSG:900913', 'EPSG:4326').right
-			
-			
-
-			 var bounds = new google.maps.LatLngBounds(
-			    new google.maps.LatLng(bott,left), 
-			    new google.maps.LatLng(top,right)				
-			);  
-			
-			console.log('bounds--',bounds.getCenter());
-			
-			console.log(layername)
-			var pyrmont = new google.maps.LatLng(bounds.getCenter().k,bounds.getCenter().B);
-			
-			var type
-			if (layername=='Hotels'){
-				type='hotel'			
-			}else{
-				type='bus station'
-			}
-			
-			var request = {				
-				location:bounds.getCenter(),
-				rankby:google.maps.places.RankBy.DISTANCE,											
-				radius: '5000',					
-				keyword:type	
-			};
-			
-			var service = new google.maps.places.PlacesService(me.mappanel.map.baseLayer.div);			
-			service.nearbySearch(request, function callback(results, status, pagination){				
-					 if (status == google.maps.places.PlacesServiceStatus.OK) {																		
-						me.createMarker(results, vectorLayer, icon);			
-						
-					 }								
-				    if (pagination.hasNextPage) {
-						pagination.nextPage();
-					} 				  
-					
-					console.log(results);					
-			});	 		
-			
-		}else{		
-			
-			var Layer1 = new OpenLayers.Layer.WMS(
-				layername,
-				'http://geoserver.namria.gov.ph/geoserver/geoportal/wms', 
-				{
-					layers:layer,				
-					transparent:true						
-				},
-				{					
-					opacity:.7
-				}
-			); 		
-			this.mappanel.map.addLayer(Layer1);		
-		}	
-	
+		}else{
+			me.loadLayer(selectedImage);		
+		}
 		
     },  
 	

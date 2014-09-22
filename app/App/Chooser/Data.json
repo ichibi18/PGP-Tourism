@@ -10,22 +10,35 @@
 	{
         name: 'Hotels',
         thumb: 'lodging.png',
-        url: 'hotels',
+        url: 'hotel',
         tooltip: 'Zoom first to the area of interest to get results',
 		isWms:false	
     },	
+	{
+        name: 'Hospitals',
+        thumb: 'hospital.png',
+        url: 'doh_hospitalrhu',
+        tooltip: '',
+		isWms:true	
+    },	
+	{
+        name: 'Schools',
+        thumb: 'school.png',
+        url: 'deped_beis',
+        tooltip: '',
+		isWms:true	
+    },		
 	{
         name: 'Airports',
         thumb: 'airport.png',
         url: 'dotc_nationalairports',
         tooltip: '',
 		isWms:true	
-    },	
-	
+    },		
 	{
         name: 'Bus Stations',
         thumb: 'bus.png',
-        url: 'hotels',
+        url: 'bus station',
         tooltip: 'Zoom first to the area of interest to get results',
 		isWms:false
     },	
@@ -35,7 +48,8 @@
         url: 'railstation10k',
         tooltip: '',
 		isWms:true	
-    },	
+    }
+	
 ]
 
 

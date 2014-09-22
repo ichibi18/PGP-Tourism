@@ -26,9 +26,6 @@ Ext.application({
     launch: function () {
 			
 		
-		var MapPanel= Ext.create('MyPath.mappanel');
-		
- 		
 		var store = Ext.create('Ext.data.TreeStore', {
             model: 'GeoExt.data.LayerTreeModel',
             root: {
@@ -67,15 +64,13 @@ Ext.application({
             }
         }); 
 		
-		 
-		
-		 var tree = Ext.create('GeoExt.tree.Panel', {
+		var tree = Ext.create('GeoExt.tree.Panel', {
             region: "east",
             title: "Layers",
             width: 250,
             autoScroll: true,
 			collapsible:true,
-            viewConfig: {
+			viewConfig: {
                 plugins: [{
                     ptype: 'treeviewdragdrop',
                     appendOnly: false
@@ -85,12 +80,21 @@ Ext.application({
             rootVisible: false,
             lines: false
         });  
+		
+		var MapPanel= Ext.create('MyPath.mappanel',{
+			tPanel:tree
+		
+		});		
+ 		
+		
+		
+		 
 				
 		var ChooserPanel = Ext.create('MyPath.Chooser.Window', {
 			id: 'img-chooser-dlg',
 			region:'west',									
 			mappanel:MapPanel,	
-			Tpanel:tree	
+			TPanel:tree	
 			}	
 		);    		
 		
